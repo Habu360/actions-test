@@ -1,3 +1,5 @@
+---  # this is the yaml "document-start" 
+
 name: Lint
 
 on:  # yamllint disable-line rule:truthy
