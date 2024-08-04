@@ -1,12 +1,12 @@
----  # this is the yaml "document-start" 
+--- # this is the yaml "document-start"
 
 name: Lint
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   push: null
   pull_request: null
 
-permissions: { }
+permissions: {}
 
 jobs:
   build:
@@ -28,7 +28,45 @@ jobs:
           fetch-depth: 0
 
       - name: Super-linter
-        uses: github/super-linter@v6  # x-release-please-version
+        uses: github/super-linter@v6 # x-release-please-version
         env:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: build
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: use node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+      - name: configure github pages
+        uses: actions/configure-pages@v4
+        with:
+          static_site_generator: next
+
+      - run: npm install
+      - run: npm run build
+      - name: upload artifacts
+        uses: actions/upload-pages-artifacts@v3
+        with:
+          path: "./out"
+      - name: deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
